@@ -1,37 +1,13 @@
-let running = false;
+let t = 0;
 
-function smoothPulse(length, peak) {
-    const start = performance.now();
+function vibration() {
+    // intervalo que acelera y desacelera suavemente
+    const interval = 12 + Math.sin(t) * 6; // de ~6ms a ~18ms
 
-    function loop(now) {
-        const t = now - start;
-        if (t >= length) return;
+    navigator.vibrate(6);
+    t += 0.05;
 
-        // envolvente gaussiana (mucho más suave que ease)
-        const x = (t / length - 0.5) * 2;
-        const env = Math.exp(-x * x * peak);
-
-        const on = 6;
-        const off = Math.max(2, 12 * (1 - env));
-
-        navigator.vibrate(on);
-        setTimeout(() => requestAnimationFrame(loop), off);
-    }
-
-    requestAnimationFrame(loop);
+    setTimeout(vibration, interval);
 }
 
-function heartbeat() {
-    if (!running) return;
-
-    smoothPulse(180, 3.5);        // lub
-    setTimeout(() => {
-        smoothPulse(110, 5.0);    // dub más débil
-    }, 210);
-
-    setTimeout(heartbeat, 620);
-}
-
-running = true;
-heartbeat();
-
+vibration();
