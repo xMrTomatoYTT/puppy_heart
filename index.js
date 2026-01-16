@@ -1,28 +1,37 @@
-function softBeat(duration = 120, maxRate = 12) {
+let running = false;
+
+function smoothPulse(length, peak) {
     const start = performance.now();
 
-    function tick(now) {
+    function loop(now) {
         const t = now - start;
-        if (t >= duration) return;
+        if (t >= length) return;
 
-        // curva suave (ease-out)
-        const k = 1 - Math.pow(t / duration, 2);
-        const interval = Math.max(8, maxRate * (1 - k));
+        // envolvente gaussiana (mucho más suave que ease)
+        const x = (t / length - 0.5) * 2;
+        const env = Math.exp(-x * x * peak);
 
-        navigator.vibrate(8);
-        setTimeout(() => requestAnimationFrame(tick), interval);
+        const on = 6;
+        const off = Math.max(2, 12 * (1 - env));
+
+        navigator.vibrate(on);
+        setTimeout(() => requestAnimationFrame(loop), off);
     }
 
-    requestAnimationFrame(tick);
+    requestAnimationFrame(loop);
 }
 
 function heartbeat() {
-    softBeat(140);          // lub
-    setTimeout(() => {
-        softBeat(90);       // dub más débil
-    }, 180);
+    if (!running) return;
 
-    setTimeout(heartbeat, 520);
+    smoothPulse(180, 3.5);        // lub
+    setTimeout(() => {
+        smoothPulse(110, 5.0);    // dub más débil
+    }, 210);
+
+    setTimeout(heartbeat, 620);
 }
 
+running = true;
 heartbeat();
+
